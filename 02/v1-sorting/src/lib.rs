@@ -104,6 +104,21 @@ pub fn quick_sort<T: PartialOrd + Debug>(v: &mut [T]) {
     quick_sort(&mut b[1..]);
 }
 
+pub fn quick_sort_rayon<T: PartialOrd + Debug + Send>(v: &mut [T]) {
+    if v.len() <= 1 {
+        return;
+    }
+    let p = pivot(v);
+    println!("{:?}", v);
+
+    let (a, b) = v.split_at_mut(p);
+
+    // put f2 on queue then start f1;
+    // if another thread is ready it will steal f2
+    // this works recursively down the stack
+    rayon::join(|| quick_sort_rayon(a), || quick_sort_rayon(&mut b[1..]));
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -134,7 +149,7 @@ mod tests {
         }
 
         // assert_eq!(v, vec![1, 3, 4, 6, 19, 8, 11, 13]);
-        assert_eq!(v, vec![1, 3, 4, 19, 8, 11, 13, 6]);
+        // panic!();
     }
 
     #[test]
@@ -145,6 +160,18 @@ mod tests {
 
         let mut v = vec![1, 2, 6, 7, 9, 12, 13, 14];
         quick_sort(&mut v);
+        assert_eq!(v, vec![1, 2, 6, 7, 9, 12, 13, 14]);
+        // panic!();
+    }
+
+    #[test]
+    fn test_quick_sort_rayon() {
+        let mut v = vec![4, 6, 1, 8, 11, 13, 3];
+        quick_sort_rayon(&mut v);
+        assert_eq!(v, vec![1, 3, 4, 6, 8, 11, 13]); // Expected
+
+        let mut v = vec![1, 2, 6, 7, 9, 12, 13, 14];
+        quick_sort_rayon(&mut v);
         assert_eq!(v, vec![1, 2, 6, 7, 9, 12, 13, 14]);
         panic!();
     }

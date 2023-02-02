@@ -41,6 +41,6 @@ mod tests {
         for _ in 0..100 {
             println!("--{}", r.next_v(100));
         }
-        panic!();
+        // panic!();
     }
 }
